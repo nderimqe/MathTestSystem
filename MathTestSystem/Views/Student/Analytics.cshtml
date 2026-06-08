@@ -1,0 +1,85 @@
+@model MathTestSystem.Web.ViewModels.StudentAnalyticsVm
+
+@{
+    ViewData["Title"] = "Student Analytics";
+}
+
+<div class="mb-4">
+    <h2>Student Analytics</h2>
+    <p class="text-muted">Enter your student ID to review saved exam results.</p>
+</div>
+
+<form asp-controller="Student" asp-action="Analytics" method="get" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <input class="form-control" name="studentId" value="@Model.StudentId" placeholder="Student ID" required />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">View Results</button>
+    </div>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+@if (Model.Results.Any())
+{
+    var student = Model.Results.First();
+    var exams = Model.Results.GroupBy(x => x.ExamId).ToList();
+
+    <div class="mb-3">
+        <h4>Student ID: @student.StudentId</h4>
+        @if (!string.IsNullOrWhiteSpace(student.StudentName))
+        {
+            <div class="text-muted">@student.StudentName</div>
+        }
+    </div>
+
+    @foreach (var exam in exams)
+    {
+        var total = exam.Count();
+        var correct = exam.Count(x => x.IsCorrect);
+        var score = (double)correct / total * 100;
+
+        <section class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Exam @exam.Key</h5>
+                <span class="badge bg-primary">@score.ToString("0.##")%</span>
+            </div>
+
+            <table class="table table-bordered table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Expression</th>
+                        <th>Student Answer</th>
+                        <th>Calculated Answer</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in exam)
+                    {
+                        <tr>
+                            <td>@task.TaskId</td>
+                            <td>@task.Expression</td>
+                            <td>@task.Expected</td>
+                            <td>@task.Calculated</td>
+                            <td>
+                                @if (task.IsCorrect)
+                                {
+                                    <span class="badge bg-success">Correct</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Wrong</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}

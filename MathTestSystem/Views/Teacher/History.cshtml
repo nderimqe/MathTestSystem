@@ -1,0 +1,77 @@
+@model MathTestSystem.Web.ViewModels.TeacherHistoryVm
+
+@{
+    ViewData["Title"] = "Teacher History";
+}
+
+<div class="mb-4">
+    <h2>Teacher History</h2>
+    <p class="text-muted">Review students, exams, and processed task results saved in the database.</p>
+</div>
+
+@if (!Model.Results.Any())
+{
+    <div class="alert alert-info">No processed exams are saved yet.</div>
+}
+else
+{
+    var students = Model.Results.GroupBy(x => x.StudentId).ToList();
+
+    @foreach (var studentGroup in students)
+    {
+        var student = studentGroup.First();
+        var total = studentGroup.Count();
+        var correct = studentGroup.Count(x => x.IsCorrect);
+        var score = (double)correct / total * 100;
+
+        <section class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h4 class="mb-0">Student ID: @student.StudentId</h4>
+                    @if (!string.IsNullOrWhiteSpace(student.StudentName))
+                    {
+                        <div class="text-muted">@student.StudentName</div>
+                    }
+                </div>
+                <span class="badge bg-primary">@score.ToString("0.##")%</span>
+            </div>
+
+            <table class="table table-bordered table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Exam</th>
+                        <th>Task</th>
+                        <th>Expression</th>
+                        <th>Student Answer</th>
+                        <th>Calculated Answer</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in studentGroup)
+                    {
+                        <tr>
+                            <td>@task.TeacherId</td>
+                            <td>@task.ExamId</td>
+                            <td>@task.TaskId</td>
+                            <td>@task.Expression</td>
+                            <td>@task.Expected</td>
+                            <td>@task.Calculated</td>
+                            <td>
+                                @if (task.IsCorrect)
+                                {
+                                    <span class="badge bg-success">Correct</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Wrong</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
